@@ -6,6 +6,7 @@
       </div>
       <div class="px-4 py-5 flex flex-col gap-2">
         <input
+          v-model="userData.fullName"
           type="text"
           placeholder="Full Name"
           class="
@@ -19,6 +20,7 @@
           "
         />
         <input
+          v-model="userData.username"
           type="text"
           placeholder="Username"
           class="
@@ -32,6 +34,7 @@
           "
         />
         <input
+          v-model="userData.password"
           type="password"
           placeholder="Password"
           class="
@@ -45,9 +48,11 @@
           "
         />
         <input
+          @click="handleSubmit"
           type="button"
-          value="Register"
-          class="
+          :value="isRegistering"
+          :class="[
+            `
             w-full
             outline-none
             p-2
@@ -57,7 +62,11 @@
             rounded-lg
             text-sm
             bg-primary
-          "
+          `,
+            {
+              'opacity-60': loading,
+            },
+          ]"
         />
         <router-link to="/">
           <input
@@ -85,6 +94,49 @@
 
 <script setup>
 import Logo from "@/components/shared/Logo.vue";
+import { computed, inject, reactive, ref } from "vue";
+
+const $axios = inject("axios");
+
+const userData = reactive({
+  fullName: "",
+  username: "",
+  password: "",
+});
+
+const loading = ref(false);
+
+const isRegistering = computed(() =>
+  loading.value == true ? "Registering.." : "Register"
+);
+
+const handleSubmit = () => {
+  if (!userData.fullName || !userData.username || !userData.password) {
+    alert("Required!");
+  } else {
+    if (!loading.value) {
+      loading.value = true;
+      $axios
+        .post("user", userData)
+        .then((response) => {
+          loading.value = false;
+          alert(response.data.message);
+          localStorage.setItem("token", response.data.token);
+          clearInputs();
+        })
+        .catch((error) => {
+          loading.value = false;
+          alert(error.response.data.error);
+        });
+    }
+  }
+};
+
+const clearInputs = () => {
+  userData.fullName = "";
+  userData.username = "";
+  userData.password = "";
+};
 </script>
 
 <style>
